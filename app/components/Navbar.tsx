@@ -35,7 +35,7 @@ export default function Navbar() {
   // Update the navItems array to remove Products
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Categories", href: "/categories" },
+    { name: "Categories", href: "/products" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]
