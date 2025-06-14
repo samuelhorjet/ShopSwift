@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'undefined', // ✅ this makes Next.js generate static HTML (good for Netlify)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // This will allow the build to succeed even with TypeScript errors
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // If you're using ESLint, you might want to ignore those errors too
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     unoptimized: true,
   },
+  // Add any other Next.js config options you need
 }
 
-export default nextConfig;
+export default nextConfig
