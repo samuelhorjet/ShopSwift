@@ -9,57 +9,31 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCart } from "../../context/CartContext"
+import { useWishlist } from "../../context/WishlistContexts"
+import { useToastHelpers } from "../../context/ToastContexts"
+import { getProductById } from "../../data/products"
 
 // Your product data (same as before)
-const productData = {
-  1: {
-    id: 1,
-    name: "Wireless Headphones Pro",
-    price: 299.99,
-    originalPrice: 399.99,
-    images: [
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-    ],
-    rating: 4.8,
-    reviews: 124,
-    category: "Electronics",
-    badge: "Best Seller",
-    description:
-      "Experience premium sound quality with our Wireless Headphones Pro. Featuring advanced noise cancellation technology, 30-hour battery life, and premium comfort design.",
-    features: [
-      "Active Noise Cancellation",
-      "30-hour battery life",
-      "Premium comfort design",
-      "High-resolution audio",
-      "Quick charge technology",
-      "Voice assistant compatible",
-    ],
-    specifications: {
-      "Driver Size": "40mm",
-      "Frequency Response": "20Hz - 20kHz",
-      "Battery Life": "30 hours",
-      "Charging Time": "2 hours",
-      Weight: "250g",
-      Connectivity: "Bluetooth 5.0",
-    },
-    inStock: true,
-    stockCount: 15,
-  },
-}
+
 
 export default function ProductDetail({ productId }: { productId: number }) {
-  const product = productData[productId as keyof typeof productData]
+  const product = getProductById(productId)
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  const { showAddToCartToast, showAddToWishlistToast, showRemoveFromWishlistToast } = useToastHelpers()
   const { addToCart } = useCart()
 
   if (!product) {
-    return <div>Product not found</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Product Not Found</h1>
+          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          </div>
+      </div>
+    )
   }
 
   const handleAddToCart = () => {
@@ -70,6 +44,23 @@ export default function ProductDetail({ productId }: { productId: number }) {
       image: product.images[0],
       quantity,
     })
+    showAddToCartToast(product.name)
+  }
+
+  const handleWishlistToggle = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id)
+      showRemoveFromWishlistToast(product.name)
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        category: product.category,
+      })
+      showAddToWishlistToast(product.name)
+    }
   }
 
   const handleQuantityChange = (change: number) => {
@@ -175,10 +166,10 @@ export default function ProductDetail({ productId }: { productId: number }) {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={isWishlisted ? "text-red-500 border-red-500" : ""}
+                  onClick={handleWishlistToggle}
+                  className={isInWishlist(product.id) ? "text-red-500 border-red-500" : ""}
                 >
-                  <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
+                  <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
                 </Button>
               </div>
             </div>

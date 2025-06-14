@@ -18,106 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "../context/CartContext";
-
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones Pro",
-    price: 299.99,
-    originalPrice: 399.99,
-    image: "/headphone.png",
-    rating: 4.8,
-    reviews: 124,
-    category: "Electronics",
-    badge: "Best Seller",
-    description: "Premium wireless headphones with noise cancellation",
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    price: 199.99,
-    originalPrice: 249.99,
-    image: "/watch.png",
-    rating: 4.6,
-    reviews: 89,
-    category: "Wearables",
-    badge: "New",
-    description: "Track your fitness goals with advanced health monitoring",
-  },
-  {
-    id: 3,
-    name: "Premium Coffee Maker",
-    price: 149.99,
-    originalPrice: 199.99,
-    image: "/coffee.png",
-    rating: 4.9,
-    reviews: 156,
-    category: "Home",
-    badge: "Sale",
-    description:
-      "Brew the perfect cup every time with precision temperature control",
-  },
-  {
-    id: 4,
-    name: "Ergonomic Office Chair",
-    price: 399.99,
-    originalPrice: 499.99,
-    image: "/chair.png",
-    rating: 4.7,
-    reviews: 203,
-    category: "Furniture",
-    badge: "Popular",
-    description: "Comfortable seating for long work sessions",
-  },
-  {
-    id: 5,
-    name: "Smartphone Pro Max",
-    price: 999.99,
-    originalPrice: 1199.99,
-    image: "/phone.png",
-    rating: 4.9,
-    reviews: 342,
-    category: "Electronics",
-    badge: "Premium",
-    description: "Latest flagship smartphone with advanced camera system",
-  },
-  {
-    id: 6,
-    name: "Designer Backpack",
-    price: 89.99,
-    originalPrice: 129.99,
-    image: "/bags.png",
-    rating: 4.5,
-    reviews: 67,
-    category: "Fashion",
-    badge: "Trending",
-    description: "Stylish and functional backpack for everyday use",
-  },
-  {
-    id: 7,
-    name: "Gaming Keyboard",
-    price: 159.99,
-    originalPrice: 199.99,
-    image: "/keyboard.png",
-    rating: 4.8,
-    reviews: 189,
-    category: "Electronics",
-    badge: "Gaming",
-    description: "RGB mechanical keyboard with tactile switches",
-  },
-  {
-    id: 8,
-    name: "Yoga Mat Premium",
-    price: 49.99,
-    originalPrice: 69.99,
-    image: "/mat.png",
-    rating: 4.6,
-    reviews: 94,
-    category: "Sports",
-    badge: "Eco-Friendly",
-    description: "Non-slip yoga mat made from sustainable materials",
-  },
-];
+import { useWishlist } from "../context/WishlistContexts";
+import { useToastHelpers } from "../context/ToastContexts";
+import { products } from "../data/products";
 
 const categories = [
   "All",
@@ -140,19 +43,24 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
-  
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const {
+    showAddToCartToast,
+    showAddToWishlistToast,
+    showRemoveFromWishlistToast,
+  } = useToastHelpers();
 
-const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
 
-useEffect(() => {
-  if (typeof window !== "undefined") {
-    const handleResize = () => setIsLargeScreen(window.innerWidth >= 1024);
-    handleResize(); // initial check
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }
-}, []);
-const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleResize = () => setIsLargeScreen(window.innerWidth >= 1024);
+      handleResize(); // initial check
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const { addToCart } = useCart();
 
@@ -193,9 +101,26 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.images?.[0] || "/placeholder.svg",
       quantity: 1,
     });
+    showAddToCartToast(product.name);
+  };
+
+  const handleWishlistToggle = (product: any) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      showRemoveFromWishlistToast(product.name);
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0] || "/placeholder.svg",
+        category: product.category,
+      });
+      showAddToWishlistToast(product.name);
+    }
   };
 
   return (
@@ -348,7 +273,7 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
                     <Card className="overflow-hidden hover:shadow-xl shadow-2xl transition-all duration-300">
                       <div className="relative flex justify-center bg-[#b497d2] items-center h-64">
                         <Image
-                          src={product.image || "/placeholder.svg"}
+                          src={product.images?.[0] || "/placeholder.svg"}
                           alt={product.name}
                           width={60}
                           height={60}
@@ -363,13 +288,19 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            className={`bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity ${
+                              isInWishlist(product.id) ? "text-red-500" : ""
+                            }`}
                             onClick={(e) => {
                               e.preventDefault();
-                              // Add to wishlist functionality would go here
+                              handleWishlistToggle(product);
                             }}
                           >
-                            <Heart className="w-5 h-5" />
+                            <Heart
+                              className={`w-5 h-5 ${
+                                isInWishlist(product.id) ? "fill-current" : ""
+                              }`}
+                            />
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
@@ -401,8 +332,11 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
                             {product.name}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {product.description}
+                            {product.description.length > 100
+                              ? product.description.slice(0, 60) + "..."
+                              : product.description}
                           </p>
+
                           <div className="flex items-center space-x-2">
                             <span className="text-2xl font-bold">
                               ${product.price}
@@ -424,7 +358,7 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
                       <div className="flex flex-col md:flex-row">
                         <div className="relative bg-[#b497d2] w-50 h-50 justify-center flex flex-col items-center">
                           <Image
-                            src={product.image || "/placeholder.svg"}
+                            src={product.images?.[0] || "/placeholder.svg"}
                             alt={product.name}
                             width={60}
                             height={60}
@@ -472,12 +406,23 @@ const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className={`bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity ${
+                                    isInWishlist(product.id)
+                                      ? "text-red-500"
+                                      : ""
+                                  }`}
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    // Add to wishlist functionality would go here
+                                    handleWishlistToggle(product);
                                   }}
                                 >
-                                  <Heart className="w-4 h-4" />
+                                  <Heart
+                                    className={`w-5 h-5 ${
+                                      isInWishlist(product.id)
+                                        ? "fill-current"
+                                        : ""
+                                    }`}
+                                  />
                                 </Button>
                                 <Button
                                   onClick={(e) => {

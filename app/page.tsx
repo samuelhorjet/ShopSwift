@@ -1,22 +1,20 @@
+
 "use client";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ShoppingBag,
-  Star,
-  ArrowRight,
-  Zap,
-  Shield,
-  Truck,
-} from "lucide-react";
+import { Star, Heart, ShoppingBag, Minus, Plus, Truck, Shield, RotateCcw, Zap, ArrowRight } from "lucide-react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "./context/CartContext";
 import { useRef, useState } from "react";
+import { useWishlist } from "./context/WishlistContexts";
+import { useToastHelpers } from "./context/ToastContexts";
 
-const featuredProducts = [
+// Mock products array to fix error
+const products = [
   {
     id: 1,
     name: "Wireless Headphones Pro",
@@ -63,6 +61,8 @@ const featuredProducts = [
   },
 ];
 
+const featuredProducts = products.slice(0, 4);
+
 const categories = [
   { name: "Electronics", icon: "📱", count: 120 },
   { name: "Fashion", icon: "👕", count: 85 },
@@ -92,15 +92,34 @@ const features = [
 
 export default function HomePage() {
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  const { showAddToCartToast, showAddToWishlistToast, showRemoveFromWishlistToast } = useToastHelpers()
 
   const handleAddToCart = (product: any) => {
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.images ? product.images[0] : product.image,
       quantity: 1,
     });
+    showAddToCartToast(product.name)
+  }
+
+  const handleWishlistToggle = (product: any) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id)
+      showRemoveFromWishlistToast(product.name)
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images ? product.images[0] : product.image,
+        category: product.category,
+      })
+      showAddToWishlistToast(product.name)
+    }
   };
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -311,14 +330,32 @@ export default function HomePage() {
                           {product.badge}
                         </span>
                       </div>
+                      <div className="absolute top-4 right-4 flex flex-col gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleWishlistToggle(product)
+                          }}
+                          className={`bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity ${
+                            isInWishlist(product.id) ? "text-red-500" : ""
+                          }`}
+                        >
+                          <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                        </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleAddToCart(product)}
-                        className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <ShoppingBag className="w-5 h-5" />
-                      </motion.button>
+                        onClick={(e) => {
+                            e.preventDefault()
+                            handleAddToCart(product)
+                          }}
+                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <ShoppingBag className="w-5 h-5" />
+                        </motion.button>
+                      </div>
                     </div>
 
                     <CardContent className="p-6">

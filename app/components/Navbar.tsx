@@ -7,11 +7,13 @@ import { ShoppingBag, Menu, X, User, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useCart } from "../context/CartContext"
+import { useWishlist } from "../context/WishlistContexts"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showFixedNavbar, setShowFixedNavbar] = useState(false)
   const { getTotalItems } = useCart()
+  const { getTotalItems: getWishlistItems } = useWishlist()
 
   const navbarRef = useRef<HTMLElement | null>(null) // Reference to the navbar
 
@@ -143,10 +145,15 @@ export default function Navbar() {
               {/* Right Side Icons */}
               <div className="flex items-center space-x-4">
                 <Link href="/wishlist">
-                  <Button variant="ghost" size="sm" className="hidden md:flex">
-                    <Heart className="w-5 h-5" />
-                  </Button>
-                </Link>
+              <Button variant="ghost" size="sm" className="hidden md:flex relative">
+                <Heart className="w-5 h-5" />
+                {getWishlistItems() > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                    {getWishlistItems()}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
                 <Link href="/profile">
                   <Button variant="ghost" size="sm" className="hidden md:flex">
                     <User className="w-5 h-5" />
@@ -193,7 +200,7 @@ export default function Navbar() {
                 <Link href="/wishlist">
                   <Button variant="ghost" size="sm">
                     <Heart className="w-5 h-5 mr-2" />
-                    Wishlist
+                    Wishlist ({getWishlistItems()})
                   </Button>
                 </Link>
                 <Link href="/profile">

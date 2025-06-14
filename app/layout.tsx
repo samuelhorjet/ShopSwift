@@ -6,6 +6,8 @@ import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 // app/globals.css or layout.tsx
 import 'leaflet/dist/leaflet.css';
+import { ToastProvider } from "./context/ToastContexts"
+import { WishlistProvider } from "./context/WishlistContexts"
 
 
 const inter = Inter({ subsets: ["latin"] })
@@ -18,11 +20,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <ToastProvider>
         <CartProvider>
+          <WishlistProvider>
           <Navbar />
           <main>{children}</main>
           <Footer />
+          </WishlistProvider>
         </CartProvider>
+        </ToastProvider>
       </body>
     </html>
   )
