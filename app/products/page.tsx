@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -140,7 +140,19 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+
+const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    const handleResize = () => setIsLargeScreen(window.innerWidth >= 1024);
+    handleResize(); // initial check
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }
+}, []);
+const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const { addToCart } = useCart();
 
@@ -250,7 +262,7 @@ export default function CategoriesPage() {
 
           {/* Filters */}
           <AnimatePresence>
-            {(showFilters || window.innerWidth >= 1024) && (
+            {(showFilters || isLargeScreen) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
